@@ -11,6 +11,14 @@ inputs:
     default: .
     # . → current directory
     required: false
+  target-env:
+    description: "dev" pr "prod". Controls whether dev dependencies are installed.
+    # dev dependencies와 관련된 action(cache actioon, npm ci)를 생략할수 있는 옵션
+    # 왜냐면 nodejs app을 prod에 deploy할때, testing/linting/formatting같이 생략할 수 있는
+    # 액션들이 많기 때문이다 (따라서 npm ci를 또 돌려줄 필요가 없다)
+    default: dev
+    required: false
+
 
 runs:
   using: composite
@@ -26,11 +34,11 @@ runs:
       uses: actions/cache@v3
       with:
         path: ${{inputs.working-dir}}/
-        # [문법] ${{}}는 중첩으로 사용할 수 없다
-        # 대신 format()을 대신 사용한다
-        key: node-modules-${{hashFiles(format('{0}/{1}',inputs.working-dir, package-lock.json))}}
+        # target-env에 따라 캐싱을 다르게 해야하므로 cache key에 추가해준다
+        key: node-modules-${{inputs.target-env}}-${{hashFiles(format('{0}/{1}',inputs.working-dir, package-lock.json))}}
     - name: Install dependencies
       if: ${{steps.cache.outputs.cache-hit != 'true'}}
-      run: npm ci
+      # --omit='env': 해당 env환경이면 skip(npm ci를 진행하지 않는다다)
+      run: ${{inputs.target-env == 'dev' && 'npm ci' || 'npm ci --omit=dev'}}
       shell: bash
       working-directory: ${{inputs.working-dir}}

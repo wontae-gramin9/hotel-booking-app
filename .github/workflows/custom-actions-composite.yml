@@ -1,7 +1,16 @@
 name: Custom Actions - Composite
+run-name: Custom Actions - Composite | env -${{inputs.target-env}}
 
 on:
   workflow_dispatch:
+    # workflow_dispatch에 input을 달아줄 수 있다
+    inputs:
+      target-env:
+        description: Which enviroment to target for dependency installation
+        type: choice
+        options:
+          - dev
+          - prod
 
 env:
   working-directory: .
@@ -22,6 +31,7 @@ jobs:
           # custom action이 필요로하는 args
           node-version: 23.x
           working-dir: ${{env.working-directory}}
+          target-env: ${{inputs.target-env}}
       - name: Test
         run: echo 'Mock test'
       - name: Build
