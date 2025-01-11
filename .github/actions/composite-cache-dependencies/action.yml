@@ -25,8 +25,10 @@ runs:
       id: cache
       uses: actions/cache@v3
       with:
-        path: ${{inputs.working-dir}}/node_modules
-        key: node-modules-${{hashFiles('${{inputs.working-dir}}/package-lock.json')}}
+        path: ${{inputs.working-dir}}/
+        # [문법] ${{}}는 중첩으로 사용할 수 없다
+        # 대신 format()을 대신 사용한다
+        key: node-modules-${{hashFiles(format('{0}/{1}',inputs.working-dir, package-lock.json))}}
     - name: Install dependencies
       if: ${{steps.cache.outputs.cache-hit != 'true'}}
       run: npm ci
